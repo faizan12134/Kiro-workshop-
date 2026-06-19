@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kiro + DocumentDB — Complete Study Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --aws-orange: #FF9900;
+    --aws-dark: #232F3E;
+    --kiro-blue: #0066CC;
+    --kiro-light: #E8F4FD;
+    --accent-green: #1E8A44;
+    --accent-red: #C0392B;
+    --accent-purple: #6C3483;
+    --bg: #F8FAFC;
+    --card: #FFFFFF;
+    --border: #E2E8F0;
+    --text: #1A202C;
+    --muted: #64748B;
+    --note-bg: #FFFBEB;
+    --note-border: #F59E0B;
+    --tip-bg: #EFF6FF;
+    --tip-border: #3B82F6;
+    --warn-bg: #FFF1F0;
+    --warn-border: #FF4D4F;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+
+  /* ── HEADER ── */
+  .hero {
+    background: linear-gradient(135deg, var(--aws-dark) 0%, #1a3a5c 50%, #0066CC 100%);
+    color: white;
+    padding: 56px 40px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    background: rgba(255,153,0,0.15);
+    border-radius: 50%;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: var(--aws-orange);
+    color: var(--aws-dark);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: 36px;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 12px;
+  }
+  .hero h1 span { color: var(--aws-orange); }
+  .hero p { font-size: 16px; opacity: 0.85; max-width: 680px; }
+  .hero-tags { margin-top: 24px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .hero-tag {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.25);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  /* ── LAYOUT ── */
+  .toc-sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: 240px;
+    height: 100vh;
+    background: var(--aws-dark);
+    padding: 24px 0;
+    overflow-y: auto;
+    z-index: 100;
+  }
+  .toc-sidebar h3 {
+    color: var(--aws-orange);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 0 20px;
+    margin-bottom: 16px;
+    font-weight: 700;
+  }
+  .toc-sidebar a {
+    display: block;
+    color: rgba(255,255,255,0.7);
+    text-decoration: none;
+    padding: 6px 20px;
+    font-size: 12px;
+    font-weight: 500;
+    border-left: 3px solid transparent;
+    transition: all 0.2s;
+  }
+  .toc-sidebar a:hover {
+    color: white;
+    border-left-color: var(--aws-orange);
+    background: rgba(255,255,255,0.05);
+  }
+  .toc-sidebar .toc-section {
+    color: rgba(255,255,255,0.35);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 12px 20px 4px;
+    font-weight: 600;
+  }
+
+  .main-content {
+    margin-left: 240px;
+    padding: 0;
+  }
+
+  /* ── SECTIONS ── */
+  .section {
+    padding: 48px 48px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section:last-child { border-bottom: none; }
+  .section-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px; height: 36px;
+    background: var(--kiro-blue);
+    color: white;
+    font-weight: 800;
+    font-size: 16px;
+    border-radius: 50%;
+    margin-bottom: 12px;
+  }
+  .section h2 {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--aws-dark);
+    margin-bottom: 8px;
+  }
+  .section-subtitle {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--border);
+  }
+  h3 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--kiro-blue);
+    margin: 28px 0 12px;
+  }
+  h4 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--aws-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 20px 0 8px;
+  }
+  p { margin-bottom: 12px; }
+
+  /* ── CARDS & BOXES ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin: 16px 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .card-title {
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+
+  .note-box {
+    background: var(--note-bg);
+    border-left: 4px solid var(--note-border);
+    border-radius: 0 8px 8px 0;
+    padding: 16px 20px;
+    margin: 16px 0;
+  }
+  .note-box .note-label {
+    font-weight: 700;
+    font-size: 12px;
+    color: #92400E;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .note-box p { color: #78350F; margin: 0; font-size: 14px; }
+
+  .tip-box {
+    background: var(--tip-bg);
+    border-left: 4px solid var(--tip-border);
+    border-radius: 0 8px 8px 0;
+    padding: 16px 20px;
+    margin: 16px 0;
+  }
+  .tip-box .tip-label {
+    font-weight: 700;
+    font-size: 12px;
+    color: #1E40AF;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+  .tip-box p { color: #1E3A8A; margin: 0; font-size: 14px; }
+
+  .warn-box {
+    background: var(--warn-bg);
+    border-left: 4px solid var(--warn-border);
+    border-radius: 0 8px 8px 0;
+    padding: 16px 20px;
+    margin: 16px 0;
+  }
+  .warn-box .warn-label {
+    font-weight: 700; font-size: 12px; color: #991B1B;
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;
+  }
+  .warn-box p { color: #7F1D1D; margin: 0; font-size: 14px; }
+
+  /* ── CODE BLOCKS ── */
+  .code-block {
+    background: #1E1E2E;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 16px 0;
+  }
+  .code-header {
+    background: #2A2A3E;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .code-header span {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+  }
+  .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-red { background: #FF5F57; }
+  .dot-yellow { background: #FEBC2E; }
+  .dot-green { background: #28C840; }
+  pre {
+    padding: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-x: auto;
+    color: #CDD6F4;
+  }
+  .kw { color: #CBA6F7; } /* keywords */
+  .str { color: #A6E3A1; } /* strings */
+  .cm { color: #6C7086; font-style: italic; } /* comments */
+  .key { color: #89DCEB; } /* keys */
+  .val { color: #FAB387; } /* values */
+  .url { color: #89B4FA; } /* urls */
+
+  /* ── DIAGRAMS (SVG boxes) ── */
+  .diagram-box {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    margin: 20px 0;
+    overflow-x: auto;
+  }
+  .diagram-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .diagram-title::before {
+    content: '';
+    display: block;
+    width: 16px; height: 3px;
+    background: var(--aws-orange);
+    border-radius: 2px;
+  }
+
+  /* ── SCREENSHOT REPLICAS ── */
+  .screen-replica {
+    background: #f0f2f5;
+    border: 1px solid #d0d7de;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 20px 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .screen-toolbar {
+    background: #24292f;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .screen-toolbar .dots { display: flex; gap: 6px; }
+  .screen-toolbar .dots span {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #ff5f57;
+  }
+  .screen-toolbar .dots span:nth-child(2) { background: #febc2e; }
+  .screen-toolbar .dots span:nth-child(3) { background: #28c840; }
+  .screen-toolbar .url-bar {
+    flex: 1;
+    background: #3d444d;
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.7);
+  }
+  .screen-body { padding: 20px; }
+
+  /* ── KIRO UI REPLICA ── */
+  .kiro-ui {
+    background: #1e1e2e;
+    border: 1px solid #313244;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 20px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+  }
+  .kiro-topbar {
+    background: #181825;
+    padding: 8px 16px;
+    display: flex; align-items: center; gap: 12px;
+    border-bottom: 1px solid #313244;
+  }
+  .kiro-topbar .dots { display: flex; gap: 6px; }
+  .kiro-topbar .dots span { width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; }
+  .kiro-topbar .dots span:nth-child(2) { background: #febc2e; }
+  .kiro-topbar .dots span:nth-child(3) { background: #28c840; }
+  .kiro-topbar .title { color: rgba(255,255,255,0.5); font-size: 12px; margin-left: 8px; }
+  .kiro-layout { display: flex; }
+  .kiro-sidebar {
+    width: 200px;
+    background: #181825;
+    border-right: 1px solid #313244;
+    padding: 12px 0;
+    min-height: 300px;
+  }
+  .kiro-sidebar .file {
+    padding: 4px 16px;
+    color: rgba(255,255,255,0.6);
+    font-size: 12px;
+    display: flex; align-items: center; gap: 8px;
+    cursor: default;
+  }
+  .kiro-sidebar .file.active { background: rgba(99,186,255,0.1); color: #89b4fa; }
+  .kiro-sidebar .folder {
+    padding: 6px 16px 2px;
+    color: rgba(255,255,255,0.35);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .kiro-editor { flex: 1; padding: 16px; color: #cdd6f4; }
+  .kiro-chat {
+    width: 280px;
+    background: #181825;
+    border-left: 1px solid #313244;
+    display: flex; flex-direction: column;
+  }
+  .kiro-chat-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #313244;
+    color: rgba(255,255,255,0.7);
+    font-size: 12px; font-weight: 600;
+  }
+  .kiro-msg {
+    padding: 10px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .kiro-msg.user { color: #a6e3a1; }
+  .kiro-msg.ai { color: #cdd6f4; }
+  .kiro-msg .sender { font-size: 10px; opacity: 0.5; margin-bottom: 4px; }
+
+  /* ── TABLES ── */
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; }
+  th {
+    background: var(--aws-dark);
+    color: white;
+    padding: 12px 16px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:nth-child(even) td { background: #F8FAFC; }
+  tr:hover td { background: var(--kiro-light); }
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-green { background: #D1FAE5; color: #065F46; }
+  .badge-blue { background: #DBEAFE; color: #1E40AF; }
+  .badge-orange { background: #FEF3C7; color: #92400E; }
+
+  /* ── GRID ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 16px 0; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 16px 0; }
+
+  /* ── STEP CARDS ── */
+  .step-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    position: relative;
+  }
+  .step-num {
+    position: absolute;
+    top: -14px; left: 20px;
+    background: var(--kiro-blue);
+    color: white;
+    font-weight: 800;
+    font-size: 12px;
+    padding: 2px 10px;
+    border-radius: 10px;
+  }
+  .step-card h4 { margin-top: 8px; color: var(--aws-dark); font-size: 15px; }
+  .step-card p { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; margin: 20px 0; }
+  .flow-box {
+    background: var(--kiro-blue);
+    color: white;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 110px;
+  }
+  .flow-box.orange { background: var(--aws-orange); color: var(--aws-dark); }
+  .flow-box.dark { background: var(--aws-dark); }
+  .flow-box.green { background: var(--accent-green); }
+  .flow-arrow {
+    color: var(--muted);
+    font-size: 20px;
+    padding: 0 6px;
+    font-weight: 300;
+  }
+
+  /* ── COMPARISON ── */
+  .vs-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 0; margin: 20px 0; align-items: start; }
+  .vs-col {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .vs-col-header {
+    padding: 14px 20px;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .vs-col-header.kiro { background: #0066CC; color: white; border-radius: 10px 10px 0 0; }
+  .vs-col-header.docdb { background: var(--aws-orange); color: var(--aws-dark); border-radius: 10px 10px 0 0; }
+  .vs-col ul { list-style: none; padding: 16px 20px; }
+  .vs-col li { padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px; display: flex; gap: 8px; }
+  .vs-col li:last-child { border-bottom: none; }
+  .vs-col li::before { content: '✓'; color: var(--accent-green); font-weight: 700; flex-shrink: 0; }
+  .vs-middle { padding: 0 16px; display: flex; align-items: center; font-size: 20px; font-weight: 800; color: var(--muted); }
+
+  /* ── JSON VIEWER ── */
+  .json-viewer {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #e6edf3;
+    margin: 16px 0;
+  }
+  .json-key { color: #79c0ff; }
+  .json-str { color: #a5d6ff; }
+  .json-num { color: #f8c291; }
+  .json-bool { color: #ff7b72; }
+  .json-bracket { color: #e6edf3; }
+  .json-comment { color: #8b949e; font-style: italic; }
+  .indent-1 { padding-left: 24px; }
+  .indent-2 { padding-left: 48px; }
+  .indent-3 { padding-left: 72px; }
+
+  /* ── REQUIREMENTS ── */
+  .req-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 12px 0;
+  }
+  .req-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    background: linear-gradient(90deg, #0066CC, #0080FF);
+    color: white;
+  }
+  .req-id { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 4px; }
+  .req-title { font-weight: 700; font-size: 14px; }
+  .req-body { padding: 14px 16px; background: white; }
+  .req-when { font-size: 12px; color: var(--muted); font-style: italic; margin-bottom: 8px; }
+  .req-shall { font-size: 14px; color: var(--text); }
+  .req-ac { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .req-ac-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 6px; }
+  .req-ac li { font-size: 13px; color: var(--text); margin: 4px 0; padding-left: 16px; position: relative; }
+  .req-ac li::before { content: '→'; position: absolute; left: 0; color: var(--kiro-blue); }
+
+  /* ── TASK LIST ── */
+  .task-list { list-style: none; }
+  .task-item {
+    display: flex; gap: 16px; align-items: flex-start;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .task-item:last-child { border-bottom: none; }
+  .task-num {
+    width: 28px; height: 28px;
+    background: var(--kiro-blue);
+    color: white;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .task-content { flex: 1; }
+  .task-name { font-weight: 700; font-size: 14px; color: var(--aws-dark); margin-bottom: 4px; }
+  .task-desc { font-size: 13px; color: var(--muted); }
+  .task-status { font-size: 11px; }
+
+  /* ── APP UI MOCKUPS ── */
+  .mockup-nav {
+    background: #212529;
+    padding: 12px 20px;
+    display: flex; align-items: center; gap: 20px;
+    font-size: 13px;
+  }
+  .mockup-nav .brand { color: var(--aws-orange); font-weight: 700; }
+  .mockup-nav a { color: rgba(255,255,255,0.7); text-decoration: none; }
+  .mockup-nav a.active { color: white; }
+  .mockup-body { padding: 24px; background: #f8f9fa; }
+  .mockup-stat {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+  .mockup-stat .num { font-size: 32px; font-weight: 800; color: var(--kiro-blue); }
+  .mockup-stat .label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .mockup-table { background: white; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; }
+  .mockup-table th { background: #e9ecef; color: #495057; padding: 10px 16px; font-size: 12px; }
+  .mockup-table td { padding: 10px 16px; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+  .mockup-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--kiro-blue); color: white;
+    padding: 8px 16px; border-radius: 6px;
+    font-size: 13px; font-weight: 600;
+    border: none; cursor: pointer;
+  }
+  .mockup-input {
+    width: 100%; padding: 8px 12px;
+    border: 1px solid #ced4da; border-radius: 6px;
+    font-size: 13px; margin-bottom: 12px;
+  }
+
+  /* ── HOOK DIAGRAM ── */
+  .hook-flow {
+    display: grid; grid-template-columns: auto 40px auto 40px auto;
+    align-items: center; gap: 0; margin: 20px 0;
+  }
+  .hook-box {
+    background: white; border: 2px solid var(--border);
+    border-radius: 10px; padding: 16px; text-align: center;
+  }
+  .hook-box.trigger { border-color: #F59E0B; background: #FFFBEB; }
+  .hook-box.action { border-color: #10B981; background: #ECFDF5; }
+  .hook-box.result { border-color: #3B82F6; background: #EFF6FF; }
+  .hook-box .icon { font-size: 28px; margin-bottom: 6px; }
+  .hook-box .title { font-weight: 700; font-size: 13px; }
+  .hook-box .desc { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .hook-arrow { text-align: center; font-size: 24px; color: var(--muted); }
+
+  /* ── EXTENSIONS GRID ── */
+  .ext-card {
+    background: white; border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px;
+    transition: box-shadow 0.2s;
+  }
+  .ext-card:hover { box-shadow: 0 4px 12px rgba(0,102,204,0.15); }
+  .ext-icon { font-size: 32px; margin-bottom: 10px; }
+  .ext-title { font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+  .ext-desc { font-size: 13px; color: var(--muted); }
+  .ext-how { margin-top: 10px; font-size: 12px; background: var(--tip-bg); color: #1E40AF; padding: 6px 10px; border-radius: 6px; }
+
+  /* ── FOOTER ── */
+  .footer {
+    background: var(--aws-dark); color: white;
+    padding: 40px 48px; margin-left: 240px;
+  }
+  .footer h3 { color: var(--aws-orange); margin-bottom: 16px; }
+  .footer a { color: rgba(255,255,255,0.7); }
+  .footer-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; }
+
+  @media print {
+    .toc-sidebar { display: none; }
+    .main-content { margin-left: 0; }
+    .footer { margin-left: 0; }
+    .section { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR TOC -->
+<nav class="toc-sidebar">
+  <h3>Contents</h3>
+  <div class="toc-section">Overview</div>
+  <a href="#intro">Introduction</a>
+  <a href="#concepts">Key Concepts</a>
+  <div class="toc-section">Steps</div>
+  <a href="#prerequisites">Prerequisites & Setup</a>
+  <a href="#step1">Step 1 — Kiro Specs</a>
+  <a href="#step2">Step 2 — Architecture</a>
+  <a href="#step3">Step 3 — MVP Plan</a>
+  <a href="#step4">Step 4 — Build & Run</a>
+  <div class="toc-section">Extras</div>
+  <a href="#hooks">Kiro Hooks</a>
+  <a href="#next">What's Next</a>
+  <a href="#cheatsheet">Cheat Sheet</a>
+</nav>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">AWS Community UAE · Agentic AI Workshop</div>
+    <h1>Kiro + <span>Amazon DocumentDB</span><br>Complete Study Guide</h1>
+    <p>Build a Fitness Center Management App from idea to running MVP in under 2 hours using spec-driven AI development. Every step explained simply, with diagrams and code.</p>
+    <div class="hero-tags">
+      <span class="hero-tag">🐍 Python Flask</span>
+      <span class="hero-tag">🗄️ Amazon DocumentDB</span>
+      <span class="hero-tag">🤖 Kiro IDE</span>
+      <span class="hero-tag">🔒 TLS / SSH Tunnel</span>
+      <span class="hero-tag">📦 MVP in 2 hrs</span>
+    </div>
+  </div>
+
+  <!-- ═══ SECTION: INTRO ═══ -->
+  <div class="section" id="intro">
+    <div class="section-number">0</div>
+    <h2>What Are We Building & Why?</h2>
+    <p class="section-subtitle">The big picture before we dive into code</p>
+
+    <p>Imagine a gym that still uses <strong>paper forms</strong> to track client workouts, body measurements, and progress. Every time a trainer needs to see a client's history, they flip through folders. It's slow, error-prone, and impossible to analyze. We're going to digitize all of this — and build a real web app to do it — in under 2 hours. How? By using <strong>Kiro IDE</strong> and <strong>Amazon DocumentDB</strong> together.</p>
+
+    <div class="note-box">
+      <div class="note-label">🧠 Simple Analogy</div>
+      <p>Think of <strong>Kiro</strong> like a very smart architect who listens to your idea, draws the blueprint, plans the construction schedule, and then also does the actual building — all automatically. And <strong>DocumentDB</strong> is like a filing cabinet that can store messy, irregular fitness data the way it actually exists, not the way a rigid spreadsheet wants it.</p>
+    </div>
+
+    <div class="vs-grid">
+      <div class="vs-col">
+        <div class="vs-col-header kiro">🤖 Kiro IDE</div>
+        <ul>
+          <li>Spec-driven: you describe, it builds</li>
+          <li>EARS format requirements (structured user stories)</li>
+          <li>Auto-generates architecture design docs</li>
+          <li>Test-driven — tests run after every task</li>
+          <li>Smart Hooks for workflow automation</li>
+          <li>Idea → working MVP in &lt; 2 hours</li>
+        </ul>
+      </div>
+      <div class="vs-middle">+</div>
+      <div class="vs-col">
+        <div class="vs-col-header docdb">🗄️ Amazon DocumentDB</div>
+        <ul>
+          <li>Stores data as flexible JSON documents</li>
+          <li>MongoDB-compatible (use PyMongo to connect)</li>
+          <li>Perfect for fitness data — no rigid schema</li>
+          <li>Nested structures (exercises inside workouts)</li>
+          <li>Aggregation pipeline for real-time analytics</li>
+          <li>Fully managed, serverless, scales automatically</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Why NOT a regular SQL database?</h3>
+    <p>SQL databases (like MySQL, PostgreSQL) need a fixed schema. Every client must have exactly the same fields. But fitness data is messy:</p>
+    <ul style="padding-left:24px; margin:12px 0;">
+      <li style="margin:6px 0;">One client tracks: weight, basic cardio, steps</li>
+      <li style="margin:6px 0;">Another tracks: VO2 max, heart rate variability, muscle-specific strength assessments</li>
+      <li style="margin:6px 0;">Each workout program has different exercises, sets, reps, weights, rest periods</li>
+    </ul>
+    <p>With SQL you'd need 10+ tables and complex JOINs. With DocumentDB, each client is just one JSON document — flexible and natural.</p>
+  </div>
+
+  <!-- ═══ SECTION: CONCEPTS ═══ -->
+  <div class="section" id="concepts">
+    <div class="section-number">📚</div>
+    <h2>Key Concepts Explained Simply</h2>
+    <p class="section-subtitle">Terms you'll hear in the workshop — explained like you're learning for the first time</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title" style="color:#0066CC;">🔷 Spec-Driven Development</div>
+        <p><strong>What it means:</strong> Instead of coding immediately, you first write a specification — a document that clearly defines what the software should do. Only after the spec is approved does coding begin.</p>
+        <p><strong>Why it matters:</strong> Most bugs happen because developers built the wrong thing. A spec prevents this by forcing clarity first.</p>
+        <div class="tip-box" style="margin-top:12px;">
+          <div class="tip-label">Analogy</div>
+          <p>An architect draws blueprints before construction begins. Spec-driven development is the same — blueprint first, then build.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:#0066CC;">🔷 EARS Format</div>
+        <p><strong>Full name:</strong> Easy Approach to Requirements Syntax</p>
+        <p><strong>Pattern:</strong> <em>WHEN [trigger] THE SYSTEM SHALL [action]</em></p>
+        <p><strong>Example:</strong></p>
+        <div style="background:#f0f4f8; padding:12px; border-radius:6px; font-size:13px; margin-top:8px;">
+          "WHEN a trainer submits client details, THE SYSTEM SHALL create a profile with personal info, goals, and health notes."
+        </div>
+        <p style="margin-top:8px; font-size:13px; color:var(--muted);">This format makes requirements unambiguous — no room for guesswork.</p>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:#0066CC;">🔷 Test-Driven Development (TDD)</div>
+        <p><strong>What it means:</strong> Tests are written (or auto-generated by Kiro) before the code. After writing code, tests run immediately to verify everything works.</p>
+        <p><strong>Kiro's approach:</strong> After completing each task, Kiro automatically runs tests. If they fail, it fixes the code. Only when tests pass does it move to the next task.</p>
+        <div class="tip-box" style="margin-top:12px;">
+          <div class="tip-label">Why this is powerful</div>
+          <p>You never end up with 15 tasks done and then discover Task 1 was broken all along.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:#0066CC;">🔷 MVP (Minimum Viable Product)</div>
+        <p><strong>What it means:</strong> The smallest version of a product that works and delivers value. Only the core features — nothing extra.</p>
+        <p><strong>Our MVP vs Full Plan:</strong></p>
+        <table style="margin-top:8px; font-size:13px;">
+          <tr><th>Plan</th><th>Tasks</th><th>Time</th></tr>
+          <tr><td>Full Plan</td><td>15 main + 22 sub</td><td>Days</td></tr>
+          <tr><td>MVP Plan</td><td>8 focused tasks</td><td>&lt; 2 hours</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:#0066CC;">🔷 SSH Tunnel</div>
+        <p><strong>Problem:</strong> DocumentDB lives inside AWS VPC (Virtual Private Cloud) — it has no public internet address. You can't connect directly from your laptop.</p>
+        <p><strong>Solution:</strong> SSH Tunnel. You connect to an EC2 instance that IS publicly accessible, and that EC2 instance forwards your connection to DocumentDB.</p>
+        <div style="background:#f0f4f8; padding:12px; border-radius:6px; margin-top:8px; font-family:monospace; font-size:12px;">
+          Your laptop → EC2 bastion → DocumentDB
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:#0066CC;">🔷 TLS Certificate (PEM file)</div>
+        <p><strong>What it is:</strong> A security certificate that proves you're connecting to the real DocumentDB and not a fake server. It encrypts all data in transit.</p>
+        <p><strong>File name:</strong> <code style="background:#f0f4f8; padding:2px 6px; border-radius:4px;">global-bundle.pem</code></p>
+        <p><strong>Without it:</strong> Connection will be refused. Always download it first.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SECTION: PREREQUISITES ═══ -->
+  <div class="section" id="prerequisites">
+    <div class="section-number">0️⃣</div>
+    <h2>Prerequisites & Setup</h2>
+    <p class="section-subtitle">Everything you need before starting — do this once, then forget about it</p>
+
+    <div class="grid-2" style="margin-bottom:24px;">
+      <div class="step-card">
+        <div class="step-num">Step 1</div>
+        <h4>Install Kiro IDE</h4>
+        <p>Download from <strong>kiro.dev/downloads</strong>. Available for macOS, Windows, and Linux. It looks similar to VS Code — tabbed editor, file explorer, integrated terminal.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">Step 2</div>
+        <h4>Create DocumentDB Cluster</h4>
+        <p>Go to AWS Console → DocumentDB → Create cluster. Note the cluster endpoint. It'll look like: <code style="font-size:11px; background:#f0f4f8; padding:2px 6px; border-radius:4px;">cluster.cluster-xxxx.us-east-1.docdb.amazonaws.com</code></p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">Step 3</div>
+        <h4>Set Up SSH Tunnel</h4>
+        <p>This creates the bridge from your local machine into the AWS VPC. Run this command and leave the terminal open while working.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">Step 4</div>
+        <h4>Download SSL Certificate</h4>
+        <p>One command downloads the security certificate. Without this, DocumentDB will reject your connection.</p>
+      </div>
+    </div>
+
+    <h3>The Exact Commands</h3>
+
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-dot dot-red"></span>
+        <span class="code-dot dot-yellow"></span>
+        <span class="code-dot dot-green"></span>
+        <span>Terminal — Run these in order</span>
+      </div>
+      <pre><span class="cm"># STEP 1: Install Python dependencies</span>
+pip install flask pymongo dnspython
+
+<span class="cm"># STEP 2: Download SSL Certificate (run from your project folder)</span>
+wget https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
+
+<span class="cm"># STEP 3: Open the SSH Tunnel (replace with your actual values)</span>
+<span class="cm"># Leave this terminal running — don't close it!</span>
+ssh -L 27017:your-docdb-endpoint:27017 ec2-user@your-ec2-bastion -N
+
+<span class="cm"># STEP 4: Run the finished app (after building with Kiro)</span>
+python run.py</pre>
+    </div>
+
+    <div class="warn-box">
+      <div class="warn-label">⚠️ Common Mistakes</div>
+      <p><strong>1.</strong> Forgetting to start the SSH tunnel before running the app — you'll get "connection refused" error.<br>
+      <strong>2.</strong> Forgetting to download global-bundle.pem — you'll get "SSL handshake failed".<br>
+      <strong>3.</strong> Closing the SSH tunnel terminal while the app is running — connection will drop.</p>
+    </div>
+
+    <h3>How the Connection Works (Visualized)</h3>
+    <div class="diagram-box">
+      <div class="diagram-title">Network Flow — Local Machine to DocumentDB</div>
+      <svg viewBox="0 0 700 140" xmlns="http://www.w3.org/2000/svg" width="100%">
+        <!-- Your Laptop -->
+        <rect x="10" y="30" width="130" height="80" rx="10" fill="#EFF6FF" stroke="#3B82F6" stroke-width="2"/>
+        <text x="75" y="58" text-anchor="middle" font-family="Inter" font-size="12" font-weight="700" fill="#1E40AF">Your Laptop</text>
+        <text x="75" y="76" text-anchor="middle" font-family="Inter" font-size="10" fill="#3B82F6">localhost:27017</text>
+        <text x="75" y="94" text-anchor="middle" font-family="Inter" font-size="10" fill="#3B82F6">Flask App</text>
+
+        <!-- Arrow 1 -->
+        <line x1="140" y1="70" x2="200" y2="70" stroke="#6B7280" stroke-width="2" marker-end="url(#arrow)"/>
+        <text x="170" y="60" text-anchor="middle" font-family="Inter" font-size="10" fill="#6B7280">SSH</text>
+        <text x="170" y="85" text-anchor="middle" font-family="Inter" font-size="10" fill="#6B7280">Tunnel</text>
+
+        <!-- EC2 Bastion -->
+        <rect x="200" y="20" width="150" height="100" rx="10" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
+        <text x="275" y="48" text-anchor="middle" font-family="Inter" font-size="12" font-weight="700" fill="#065F46">EC2 Bastion</text>
+        <text x="275" y="66" text-anchor="middle" font-family="Inter" font-size="10" fill="#10B981">Public IP</text>
+        <text x="275" y="84" text-anchor="middle" font-family="Inter" font-size="10" fill="#10B981">Lives in VPC</text>
+        <text x="275" y="102" text-anchor="middle" font-family="Inter" font-size="10" fill="#10B981">Port forwards to DB</text>
+        <!-- VPC boundary -->
+        <rect x="192" y="6" width="500" height="130" rx="14" fill="none" stroke="#F59E0B" stroke-width="2" stroke-dasharray="6,4"/>
+        <text x="445" y="18" text-anchor="middle" font-family="Inter" font-size="10" fill="#92400E" font-weight="600">AWS VPC (Private Network)</text>
+
+        <!-- Arrow 2 -->
+        <line x1="350" y1="70" x2="410" y2="70" stroke="#6B7280" stroke-width="2" marker-end="url(#arrow)"/>
+        <text x="380" y="60" text-anchor="middle" font-family="Inter" font-size="10" fill="#6B7280">Private</text>
+        <text x="380" y="85" text-anchor="middle" font-family="Inter" font-size="10" fill="#6B7280">Network</text>
+
+        <!-- DocumentDB -->
+        <rect x="410" y="20" width="160" height="100" rx="10" fill="#FFF7ED" stroke="#F97316" stroke-width="2"/>
+        <text x="490" y="48" text-anchor="middle" font-family="Inter" font-size="12" font-weight="700" fill="#9A3412">Amazon</text>
+        <text x="490" y="64" text-anchor="middle" font-family="Inter" font-size="12" font-weight="700" fill="#9A3412">DocumentDB</text>
+        <text x="490" y="84" text-anchor="middle" font-family="Inter" font-size="10" fill="#C2410C">Port 27017</text>
+        <text x="490" y="102" text-anchor="middle" font-family="Inter" font-size="10" fill="#C2410C">TLS Required</text>
+
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#6B7280"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ═══ SECTION: STEP 1 ═══ -->
+  <div class="section" id="step1">
+    <div class="section-number">1</div>
+    <h2>Step 1 — Starting with Kiro Specs</h2>
+    <p class="section-subtitle">From rough idea to structured requirements — without writing a single line of code yet</p>
+
+    <p>This is the most important step and what makes Kiro fundamentally different. Instead of immediately coding, Kiro asks: <em>"What exactly are you building?"</em> You write a plain English prompt. Kiro reads it and generates a formal requirements document.</p>
+
+    <h3>The Prompt You Give to Kiro</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span>
+        <span>Kiro Chat Input — Paste this exactly</span>
+      </div>
+      <pre>I need to build a Fitness Center management system that
+digitizes paper-based fitness tracking using Python as
+the primary development language.
+Application needs to be a web application.
+The system should use Amazon DocumentDB as the backend
+database to handle complex workout data structures
+and support analytics queries.
+
+Key requirements include:
+- Client registration
+- Workout program creation and management
+- Body measurement recording and trends
+- Client progress tracking and analytics</pre>
+    </div>
+
+    <div class="tip-box">
+      <div class="tip-label">💡 What to specify vs what to leave to Kiro</div>
+      <p><strong>You specify:</strong> Python (language), DocumentDB (database), web application (type)<br>
+      <strong>Leave to Kiro:</strong> Flask (framework), Bootstrap (UI), folder structure, file naming. Kiro picks the best options.</p>
+    </div>
+
+    <h3>What Kiro Does After You Send the Prompt</h3>
+    <div class="flow" style="flex-wrap:wrap; gap:8px; margin:20px 0;">
+      <div class="flow-box" style="min-width:140px; text-align:center;">1️⃣ Reads your prompt</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box orange" style="min-width:140px; text-align:center;">2️⃣ Asks clarifying questions</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box green" style="min-width:140px; text-align:center;">3️⃣ Generates 6 requirements</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-box dark" style="min-width:140px; text-align:center;">4️⃣ Waits for your approval</div>
+    </div>
+
+    <h3>The 6 EARS Requirements Kiro Generates</h3>
+    <p>Kiro automatically creates these structured requirements. Read them carefully before approving — this is your chance to catch anything missing!</p>
+
+    <div class="req-card">
+      <div class="req-header">
+        <span class="req-id">REQ-1</span>
+        <span class="req-title">Client Registration</span>
+      </div>
+      <div class="req-body">
+        <div class="req-when">WHEN a trainer submits client details,</div>
+        <div class="req-shall">THE SYSTEM SHALL create a profile with personal information, goals, and health notes.</div>
+        <div class="req-ac">
+          <div class="req-ac-title">Acceptance Criteria</div>
+          <ul class="req-ac">
+            <li>System stores name, email, phone, date of birth</li>
+            <li>System stores fitness goals and health notes</li>
+            <li>Duplicate email addresses are rejected</li>
+            <li>Profile is immediately viewable after creation</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="req-card">
+      <div class="req-header">
+        <span class="req-id">REQ-2</span>
+        <span class="req-title">Workout Management</span>
+      </div>
+      <div class="req-body">
+        <div class="req-when">WHEN a trainer creates a workout program,</div>
+        <div class="req-shall">THE SYSTEM SHALL store structured exercise data with sets, reps, weights, and rest periods for each exercise.</div>
+        <div class="req-ac">
+          <div class="req-ac-title">Acceptance Criteria</div>
+          <ul class="req-ac">
+            <li>Multiple exercises can be added to one program</li>
+            <li>Each exercise stores: name, sets, reps, weight (kg), rest (seconds)</li>
+            <li>Programs are linked to a specific client</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="req-card">
+      <div class="req-header">
+        <span class="req-id">REQ-3</span>
+        <span class="req-title">Body Measurements</span>
+      </div>
+      <div class="req-body">
+        <div class="req-when">WHEN measurements are recorded,</div>
+        <div class="req-shall">THE SYSTEM SHALL calculate trends and flag significant changes over time.</div>
+        <div class="req-ac">
+          <div class="req-ac-title">Acceptance Criteria</div>
+          <ul class="req-ac">
+            <li>Records: weight, height, BMI, body fat percentage</li>
+            <li>BMI is auto-calculated from weight and height</li>
+            <li>Significant changes (±5%) are highlighted</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-3" style="margin-top:8px;">
+      <div class="req-card" style="font-size:13px;">
+        <div class="req-header"><span class="req-id">REQ-4</span><span class="req-title">Progress Analytics</span></div>
+        <div class="req-body">THE SYSTEM SHALL provide real-time dashboards showing client performance and goal achievement.</div>
+      </div>
+      <div class="req-card" style="font-size:13px;">
+        <div class="req-header"><span class="req-id">REQ-5</span><span class="req-title">Authentication</span></div>
+        <div class="req-body">WHEN a user logs in, THE SYSTEM SHALL verify credentials and assign role-based access (trainer vs admin).</div>
+      </div>
+      <div class="req-card" style="font-size:13px;">
+        <div class="req-header"><span class="req-id">REQ-6</span><span class="req-title">Reporting</span></div>
+        <div class="req-body">THE SYSTEM SHALL generate printable progress reports per client covering selected time ranges.</div>
+      </div>
+    </div>
+
+    <div class="note-box" style="margin-top:24px;">
+      <div class="note-label">✋ Important — What you do at this point</div>
+      <p>Read all 6 requirements. If something is missing or wrong, tell Kiro in chat. For example: "REQ-3 should also track waist measurements." Kiro will update the requirement. Only approve when everything looks right. <strong>You cannot easily change requirements later without affecting the design and code.</strong></p>
+    </div>
+  </div>
+
+  <!-- ═══ SECTION: STEP 2 ═══ -->
+  <div class="section" id="step2">
+    <div class="section-number">2</div>
+    <h2>Step 2 — Architecture & DocumentDB Schema</h2>
+    <p class="section-subtitle">After requirements are approved, Kiro designs the full system — automatically</p>
+
+    <p>Once you approve the requirements, Kiro moves to the design phase. It creates a complete technical architecture document including system design, database schema, data flow diagrams, and component interfaces. You review and approve this too before any code is written.</p>
+
+    <h3>Application Architecture (MVC Pattern)</h3>
+    <div class="diagram-box">
+      <div class="diagram-title">System Architecture — Browser to DocumentDB</div>
+      <svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" width="100%">
+        <!-- Browser -->
+        <rect x="10" y="60" width="110" height="80" rx="10" fill="#EFF6FF" stroke="#3B82F6" stroke-width="2"/>
+        <text x="65" y="92" text-anchor="middle" font-family="Inter" font-size="11" font-weight="700" fill="#1E40AF">🌐 Browser</text>
+        <text x="65" y="108" text-anchor="middle" font-family="Inter" font-size="10" fill="#3B82F6">Bootstrap UI</text>
+        <text x="65" y="124" text-anchor="middle" font-family="Inter" font-size="9" fill="#6B7280">HTML / CSS / JS</text>
+
+        <!-- Arrow -->
+        <line x1="120" y1="100" x2="155" y2="100" stroke="#6B7280" stroke-width="2" marker-end="url(#a2)"/>
+        <text x="137" y="93" text-anchor="middle" font-family="Inter" font-size="9" fill="#6B7280">HTTP</text>
+
+        <!-- Flask -->
+        <rect x="155" y="50" width="110" height="100" rx="10" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
+        <text x="210" y="80" text-anchor="middle" font-family="Inter" font-size="11" font-weight="700" fill="#065F46">🐍 Flask</text>
+        <text x="210" y="96" text-anchor="middle" font-family="Inter" font-size="10" fill="#10B981">Routes & Views</text>
+        <text x="210" y="112" text-anchor="middle" font-family="Inter" font-size="9" fill="#6B7280">app.py</text>
+        <text x="210" y="128" text-anchor="middle" font-family="Inter" font-size="9" fill="#6B7280">routes/*.py</text>
+
+        <!-- Arrow -->
+        <line x1="265" y1="100" x2="300" y2="100" stroke="#6B7280" stroke-width="2" marker-end="url(#a2)"/>
+
+        <!-- Business Logic -->
+        <rect x="300" y="50" width="120" height="100" rx="10" fill="#FFF7ED" stroke="#F97316" stroke-width="2"/>
+        <text x="360" y="78" text-anchor="middle" font-family="Inter" font-size="11" font-weight="700" fill="#9A3412">⚙️ Business</text>
+        <text x="360" y="94" text-anchor="middle" font-family="Inter" font-size="11" font-weight="700" fill="#9A3412">Logic</text>
+        <text x="360" y="112" text-anchor="middle" font-family="Inter" font-size="9" fill="#6B7280">Validation</text>
+        <text x="360" y="126" text-anchor="middle" font-family="Inter" font-size="9" fill="#6B7280">Calculations (BMI)</text>
+
+        <!-- Arrow -->
+        <line x1="420" y1="100" x2="455" y2="100" stroke="#6B7280" stroke-width="2" marker-end="url(#a2)"/>
+
+        <!-- PyMongo -->
+        <rect x="455" y="50" width="100" height="100" rx="10" fill="#F5F3FF" stroke="#7C3AED" stroke-width="2"/>
+        <text x="505" y="80" text-anchor="middle" font-family="Inter" font-size="11" font-weight="700" fill="#5B21B6">📦 PyMongo</text>
+        <text x="505" y="98" text-anchor="middle" font-family="Inter" font-size="10" fill="#7C3AED">Data Access</text>
+        <text x="505" y="114" text-anchor="middle" font-family="Inter" font-size="9" fill="#6B7280">MongoDB driver</text>
+        <text x="505" y="130" text-anchor="middle" font-family="Inter" font-size="9" fill="#6B7280">models/*.py</text>
+
+        <!-- Arrow -->
+        <line x1="555" y1="100" x2="590" y2="100" stroke="#6B7280" stroke-width="2" marker-end="url(#a2)"/>
+
+        <!-- DocumentDB -->
+        <rect x="590" y="40" width="120" height="120" rx="10" fill="#FFF7ED" stroke="#FF9900" stroke-width="3"/>
+        <text x="650" y="72" text-anchor="middle" font-family="Inter" font-size="11" font-weight="700" fill="#9A3412">🗄️ Amazon</text>
+        <text x="650" y="88" text-anchor="middle" font-family="Inter" font-size="11" font-weight="700" fill="#9A3412">DocumentDB</text>
+        <text x="650" y="108" text-anchor="middle" font-family="Inter" font-size="9" fill="#C2410C">3 Collections</text>
+        <text x="650" y="122" text-anchor="middle" font-family="Inter" font-size="9" fill="#C2410C">TLS + Port 27017</text>
+        <text x="650" y="136" text-anchor="middle" font-family="Inter" font-size="9" fill="#C2410C">Via SSH Tunnel</text>
+
+        <defs>
+          <marker id="a2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#6B7280"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="tip-box">
+      <div class="tip-label">🔍 MVC Pattern Explained</div>
+      <p><strong>Model (M):</strong> The data layer — DocumentDB collections + PyMongo models. This is where data lives.<br>
+      <strong>View (V):</strong> The HTML pages (Bootstrap templates) — what the user sees.<br>
+      <strong>Controller (C):</strong> Flask routes — they receive requests, ask the Model for data, and send it to the View.</p>
+    </div>
+
+    <h3>DocumentDB Collections — The Database Schema</h3>
+    <p>DocumentDB stores data in <strong>collections</strong> (like tables in SQL), and each entry is a <strong>document</strong> (a JSON object). Here's exactly what gets stored:</p>
+
+    <h4>Collection 1: clients</h4>
+    <div class="json-viewer">
+      <span class="json-comment">// One document per gym client</span><br>
+      <span class="json-bracket">{</span><br>
+      <span class="indent-1"><span class="json-key">"_id"</span>: <span class="json-str">ObjectId("64a8f..."),</span></span><br>
+      <span class="indent-1"><span class="json-key">"name"</span>: <span class="json-str">"Ahmed Al Rashid",</span></span><br>
+      <span class="indent-1"><span class="json-key">"email"</span>: <span class="json-str">"ahmed@email.com",</span></span><br>
+      <span class="indent-1"><span class="json-key">"phone"</span>: <span class="json-str">"+971-50-1234567",</span></span><br>
+      <span class="indent-1"><span class="json-key">"date_of_birth"</span>: <span class="json-str">"1990-05-15",</span></span><br>
+      <span class="indent-1"><span class="json-key">"goals"</span>: <span class="json-str">"Lose 10kg, build core strength",</span></span><br>
+      <span class="indent-1"><span class="json-key">"health_notes"</span>: <span class="json-str">"Lower back injury — avoid deadlifts",</span></span><br>
+      <span class="indent-1"><span class="json-key">"created_at"</span>: <span class="json-str">"2025-06-01T09:00:00Z"</span></span><br>
+      <span class="json-bracket">}</span>
+    </div>
+
+    <h4>Collection 2: workout_programs</h4>
+    <div class="json-viewer">
+      <span class="json-comment">// This is why DocumentDB is perfect — nested arrays!</span><br>
+      <span class="json-comment">// In SQL this would need 3 tables + JOINs</span><br>
+      <span class="json-bracket">{</span><br>
+      <span class="indent-1"><span class="json-key">"_id"</span>: <span class="json-str">ObjectId("64b9a..."),</span></span><br>
+      <span class="indent-1"><span class="json-key">"client_id"</span>: <span class="json-str">ObjectId("64a8f..."),</span> <span class="json-comment">// links to client</span></span><br>
+      <span class="indent-1"><span class="json-key">"name"</span>: <span class="json-str">"Week 1 — Full Body",</span></span><br>
+      <span class="indent-1"><span class="json-key">"description"</span>: <span class="json-str">"Beginner strength program",</span></span><br>
+      <span class="indent-1"><span class="json-key">"exercises"</span>: <span class="json-bracket">[</span> <span class="json-comment">// array of exercises!</span></span><br>
+      <span class="indent-2"><span class="json-bracket">{</span></span><br>
+      <span class="indent-3"><span class="json-key">"name"</span>: <span class="json-str">"Squat",</span></span><br>
+      <span class="indent-3"><span class="json-key">"sets"</span>: <span class="json-num">3,</span></span><br>
+      <span class="indent-3"><span class="json-key">"reps"</span>: <span class="json-num">12,</span></span><br>
+      <span class="indent-3"><span class="json-key">"weight_kg"</span>: <span class="json-num">40,</span></span><br>
+      <span class="indent-3"><span class="json-key">"rest_seconds"</span>: <span class="json-num">90</span></span><br>
+      <span class="indent-2"><span class="json-bracket">},</span></span><br>
+      <span class="indent-2"><span class="json-bracket">{</span></span><br>
+      <span class="indent-3"><span class="json-key">"name"</span>: <span class="json-str">"Push-up",</span></span><br>
+      <span class="indent-3"><span class="json-key">"sets"</span>: <span class="json-num">3,</span></span><br>
+      <span class="indent-3"><span class="json-key">"reps"</span>: <span class="json-num">15,</span></span><br>
+      <span class="indent-3"><span class="json-key">"weight_kg"</span>: <span class="json-num">0,</span> <span class="json-comment">// bodyweight</span></span><br>
+      <span class="indent-3"><span class="json-key">"rest_seconds"</span>: <span class="json-num">60</span></span><br>
+      <span class="indent-2"><span class="json-bracket">}</span></span><br>
+      <span class="indent-1"><span class="json-bracket">]</span></span><br>
+      <span class="json-bracket">}</span>
+    </div>
+
+    <h4>Collection 3: body_measurements</h4>
+    <div class="json-viewer">
+      <span class="json-comment">// One document per measurement session</span><br>
+      <span class="json-bracket">{</span><br>
+      <span class="indent-1"><span class="json-key">"client_id"</span>: <span class="json-str">ObjectId("64a8f..."),</span></span><br>
+      <span class="indent-1"><span class="json-key">"date"</span>: <span class="json-str">"2025-06-15",</span></span><br>
+      <span class="indent-1"><span class="json-key">"weight_kg"</span>: <span class="json-num">82.5,</span></span><br>
+      <span class="indent-1"><span class="json-key">"height_cm"</span>: <span class="json-num">175,</span></span><br>
+      <span class="indent-1"><span class="json-key">"bmi"</span>: <span class="json-num">26.9,</span> <span class="json-comment">// auto-calculated</span></span><br>
+      <span class="indent-1"><span class="json-key">"body_fat_pct"</span>: <span class="json-num">18.5,</span></span><br>
+      <span class="indent-1"><span class="json-key">"notes"</span>: <span class="json-str">"Down 2kg from last month!"</span></span><br>
+      <span class="json-bracket">}</span>
+    </div>
+
+    <div class="note-box">
+      <div class="note-label">🧠 Why is nesting exercises inside workout_programs so powerful?</div>
+      <p>In a SQL database, you'd have a <code>workout_programs</code> table and a separate <code>exercises</code> table, linked by an ID. To get a full workout, you'd need a JOIN query. In DocumentDB, all exercises live inside the workout document — one query gets everything. Simpler, faster, more natural.</p>
+    </div>
+  </div>
+
+  <!-- ═══ SECTION: STEP 3 ═══ -->
+  <div class="section" id="step3">
+    <div class="section-number">3</div>
+    <h2>Step 3 — Implementation Planning (MVP Mode)</h2>
+    <p class="section-subtitle">Kiro converts the approved design into a numbered task list — you choose full or MVP</p>
+
+    <p>After you approve the architecture design, Kiro creates an implementation plan. By default it generates <strong>15 main tasks with 22+ sub-tasks</strong> — a full production app. But for today's workshop, we ask for the MVP version.</p>
+
+    <h3>The MVP Prompt</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span>
+        <span>Kiro Chat Input — MVP mode</span>
+      </div>
+      <pre>create MVP.
+Please just focus on core functionalities.
+It is MVP for application.
+
+Use below documentdb connection string:
+
+mongodb://adminuser:&lt;password&gt;@127.0.0.1:27017/?tls=true
+&tlsCAFile=global-bundle.pem&retryWrites=false
+&tlsAllowInvalidHostnames=true&directConnection=true</pre>
+    </div>
+
+    <div class="tip-box">
+      <div class="tip-label">❓ Why do we give the connection string at this point?</div>
+      <p>Kiro uses Test-Driven Development — it runs real tests against your real database after each task. So it needs the actual connection string to connect. The <code>127.0.0.1:27017</code> is your local machine — which forwards to DocumentDB via the SSH tunnel you set up.</p>
+    </div>
+
+    <h3>Full Plan vs MVP Plan</h3>
+    <div class="grid-2">
+      <div class="card" style="border: 2px solid #CBD5E0;">
+        <div class="card-title" style="color:#6B7280;">❌ Full Plan (skip for today)</div>
+        <table style="font-size:13px; margin:0;">
+          <tr><td style="padding:4px 0;"><span class="badge badge-orange">15</span> main tasks</td></tr>
+          <tr><td style="padding:4px 0;"><span class="badge badge-orange">22+</span> sub-tasks</td></tr>
+          <tr><td style="padding:4px 0;">All features including reporting, advanced auth, API</td></tr>
+          <tr><td style="padding:4px 0;">Days to build properly</td></tr>
+        </table>
+      </div>
+      <div class="card" style="border: 2px solid #10B981;">
+        <div class="card-title" style="color:#065F46;">✅ MVP Plan (what we build today)</div>
+        <table style="font-size:13px; margin:0;">
+          <tr><td style="padding:4px 0;"><span class="badge badge-green">8</span> focused tasks</td></tr>
+          <tr><td style="padding:4px 0;">Core features only</td></tr>
+          <tr><td style="padding:4px 0;">Fully working web app</td></tr>
+          <tr><td style="padding:4px 0;">Under 2 hours</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <h3>The 8 MVP Tasks — What Each One Builds</h3>
+    <ul class="task-list" style="background:white; border:1px solid var(--border); border-radius:10px; padding:16px 24px;">
+      <li class="task-item">
+        <div class="task-num">1</div>
+        <div class="task-content">
+          <div class="task-name">Project Structure & Config</div>
+          <div class="task-desc">Creates the folder structure: <code style="background:#f0f4f8; padding:2px 6px; border-radius:4px;">app/</code>, <code style="background:#f0f4f8; padding:2px 6px; border-radius:4px;">models/</code>, <code style="background:#f0f4f8; padding:2px 6px; border-radius:4px;">routes/</code>, <code style="background:#f0f4f8; padding:2px 6px; border-radius:4px;">templates/</code>, <code style="background:#f0f4f8; padding:2px 6px; border-radius:4px;">static/</code>. Sets up Flask app factory pattern, config file with DocumentDB settings, environment variables.</div>
+        </div>
+      </li>
+      <li class="task-item">
+        <div class="task-num">2</div>
+        <div class="task-content">
+          <div class="task-name">DocumentDB Connection Implementation</div>
+          <div class="task-desc">Writes the PyMongo connection code using your connection string + TLS certificate. Includes connection pooling, error handling, health check endpoint. <strong>Runs a test to verify the actual connection works.</strong></div>
+        </div>
+      </li>
+      <li class="task-item">
+        <div class="task-num">3</div>
+        <div class="task-content">
+          <div class="task-name">Client Management Models & Forms</div>
+          <div class="task-desc">Creates the Client model with CRUD operations (Create, Read, Update, Delete). Builds the client registration form with validation. Adds search and filter functionality. Tests all CRUD operations against DocumentDB.</div>
+        </div>
+      </li>
+      <li class="task-item">
+        <div class="task-num">4</div>
+        <div class="task-content">
+          <div class="task-name">Workout Program Management System</div>
+          <div class="task-desc">Creates the WorkoutProgram model with nested exercise arrays. Builds forms to add/edit programs and individual exercises. Links programs to clients. Tests creation and retrieval of nested structures.</div>
+        </div>
+      </li>
+      <li class="task-item">
+        <div class="task-num">5</div>
+        <div class="task-content">
+          <div class="task-name">Body Measurement Tracking with Trends</div>
+          <div class="task-desc">Creates the Measurement model. Auto-calculates BMI from weight and height. Detects significant changes (±5%). Builds chart-ready data arrays for trend visualization.</div>
+        </div>
+      </li>
+      <li class="task-item">
+        <div class="task-num">6</div>
+        <div class="task-content">
+          <div class="task-name">Progress Dashboard</div>
+          <div class="task-desc">Uses DocumentDB's <strong>aggregation pipeline</strong> — like SQL GROUP BY on steroids — to calculate summary stats: total clients, active programs, average BMI, goal completion rates. Displays charts and trend lines.</div>
+        </div>
+      </li>
+      <li class="task-item">
+        <div class="task-num">7</div>
+        <div class="task-content">
+          <div class="task-name">Basic Authentication</div>
+          <div class="task-desc">Login/logout with session management. Two roles: <strong>Trainer</strong> (can view/edit their own clients) and <strong>Admin</strong> (can see all clients, all trainers). Password hashing (never stored in plain text).</div>
+        </div>
+      </li>
+      <li class="task-item">
+        <div class="task-num">8</div>
+        <div class="task-content">
+          <div class="task-name">Web Interface (Bootstrap)</div>
+          <div class="task-desc">Responsive UI using Bootstrap — works on desktop and mobile. Navigation bar, sidebar, data tables, forms with validation feedback, charts using Chart.js, modal dialogs.</div>
+        </div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- ═══ SECTION: STEP 4 ═══ -->
+  <div class="section" id="step4">
+    <div class="section-number">4</div>
+    <h2>Step 4 — Build, Run & The Live App</h2>
+    <p class="section-subtitle">Kiro executes all 8 tasks automatically — you verify, then run the app</p>
+
+    <h3>How Kiro Executes Tasks</h3>
+    <div class="flow" style="flex-direction:column; align-items:flex-start; gap:0;">
+      <div style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px dashed var(--border); width:100%;">
+        <div style="width:32px; height:32px; background:#0066CC; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0;">1</div>
+        <div><strong>Kiro starts Task 1</strong> — writes all the code for project structure</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px dashed var(--border); width:100%;">
+        <div style="width:32px; height:32px; background:#10B981; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0;">2</div>
+        <div><strong>Kiro runs tests automatically</strong> — verifies the code works as expected</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px dashed var(--border); width:100%;">
+        <div style="width:32px; height:32px; background:#F59E0B; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0;">3</div>
+        <div><strong>Kiro asks you to verify</strong> — "Does this look right? Can you confirm the folder structure?" You check and approve.</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px dashed var(--border); width:100%;">
+        <div style="width:32px; height:32px; background:#0066CC; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0;">4</div>
+        <div><strong>Kiro moves to Task 2</strong> — repeats the same cycle for each of the 8 tasks</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:12px; padding:12px 0; width:100%;">
+        <div style="width:32px; height:32px; background:#6C3483; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0;">✓</div>
+        <div><strong>All 8 tasks complete</strong> — run <code style="background:#f0f4f8; padding:2px 8px; border-radius:4px; font-weight:700;">python run.py</code> and open your browser</div>
+      </div>
+    </div>
+
+    <div class="warn-box" style="margin-top:16px;">
+      <div class="warn-label">⚠️ Never skip Kiro's verification requests!</div>
+      <p>When Kiro says "please verify this works" — actually check it. If Task 2 (DB connection) is broken and you skip verification, Tasks 3-8 will all fail on top of it. Five minutes of verification saves hours of debugging.</p>
+    </div>
+
+    <h3>The Finished App — What You'll See</h3>
+
+    <h4>Main Dashboard</h4>
+    <div class="screen-replica">
+      <div class="screen-toolbar">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <div class="url-bar">http://localhost:5000/dashboard</div>
+      </div>
+      <div class="mockup-body">
+        <div class="mockup-nav" style="margin:-20px -20px 20px; border-radius:0;">
+          <span class="brand">💪 FitCenter Pro</span>
+          <a href="#" class="active">Dashboard</a>
+          <a href="#">Clients</a>
+          <a href="#">Workouts</a>
+          <a href="#">Reports</a>
+          <span style="margin-left:auto; color:rgba(255,255,255,0.5); font-size:12px;">Trainer: Hani | <a href="#" style="color:#FF9900;">Logout</a></span>
+        </div>
+        <div style="font-size:13px; font-weight:700; color:#6B7280; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:12px;">Overview — June 2025</div>
+        <div class="grid-3" style="margin-bottom:20px;">
+          <div class="mockup-stat"><div class="num">24</div><div class="label">Total Clients</div></div>
+          <div class="mockup-stat"><div class="num" style="color:#10B981;">18</div><div class="label">Active Programs</div></div>
+          <div class="mockup-stat"><div class="num" style="color:#F97316;">73%</div><div class="label">Goal Achievement</div></div>
+        </div>
+        <div class="mockup-table">
+          <table style="margin:0;">
+            <thead><tr><th>Client</th><th>Last Session</th><th>BMI</th><th>Progress</th><th>Action</th></tr></thead>
+            <tbody>
+              <tr><td>Ahmed Al Rashid</td><td>2025-06-14</td><td>26.9</td><td><span class="badge badge-green">On track</span></td><td><button class="mockup-btn" style="padding:4px 10px; font-size:11px;">View</button></td></tr>
+              <tr><td>Sara Mohammed</td><td>2025-06-12</td><td>22.1</td><td><span class="badge badge-blue">Ahead</span></td><td><button class="mockup-btn" style="padding:4px 10px; font-size:11px;">View</button></td></tr>
+              <tr><td>Khalid Hassan</td><td>2025-06-10</td><td>31.2</td><td><span class="badge badge-orange">Needs attention</span></td><td><button class="mockup-btn" style="padding:4px 10px; font-size:11px;">View</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <h4>Client Registration Form</h4>
+    <div class="screen-replica">
+      <div class="screen-toolbar">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <div class="url-bar">http://localhost:5000/clients/new</div>
+      </div>
+      <div class="mockup-body">
+        <div style="font-size:18px; font-weight:700; margin-bottom:20px; color:#212529;">Add New Client</div>
+        <div class="grid-2">
+          <div>
+            <div style="font-size:12px; font-weight:600; color:#495057; margin-bottom:4px;">Full Name *</div>
+            <input class="mockup-input" type="text" value="Ahmed Al Rashid" readonly>
+            <div style="font-size:12px; font-weight:600; color:#495057; margin-bottom:4px;">Email Address *</div>
+            <input class="mockup-input" type="text" value="ahmed@email.com" readonly>
+            <div style="font-size:12px; font-weight:600; color:#495057; margin-bottom:4px;">Phone</div>
+            <input class="mockup-input" type="text" value="+971-50-1234567" readonly>
+          </div>
+          <div>
+            <div style="font-size:12px; font-weight:600; color:#495057; margin-bottom:4px;">Date of Birth</div>
+            <input class="mockup-input" type="text" value="1990-05-15" readonly>
+            <div style="font-size:12px; font-weight:600; color:#495057; margin-bottom:4px;">Fitness Goals</div>
+            <input class="mockup-input" type="text" value="Lose 10kg, build core strength" readonly>
+            <div style="font-size:12px; font-weight:600; color:#495057; margin-bottom:4px;">Health Notes</div>
+            <input class="mockup-input" type="text" value="Lower back injury — avoid deadlifts" readonly>
+          </div>
+        </div>
+        <button class="mockup-btn">💾 Save Client</button>
+      </div>
+    </div>
+
+    <h4>Workout Program Builder</h4>
+    <div class="screen-replica">
+      <div class="screen-toolbar">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <div class="url-bar">http://localhost:5000/workouts/new</div>
+      </div>
+      <div class="mockup-body">
+        <div style="font-size:18px; font-weight:700; margin-bottom:20px; color:#212529;">Create Workout Program</div>
+        <div style="margin-bottom:16px;">
+          <div style="font-size:12px; font-weight:600; color:#495057; margin-bottom:4px;">Program Name</div>
+          <input class="mockup-input" value="Week 1 — Full Body Strength" readonly>
+        </div>
+        <div style="font-size:14px; font-weight:700; color:#212529; margin-bottom:12px;">Exercises</div>
+        <div class="mockup-table">
+          <table style="margin:0; font-size:13px;">
+            <thead><tr><th>#</th><th>Exercise</th><th>Sets</th><th>Reps</th><th>Weight (kg)</th><th>Rest (sec)</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Squat</td><td>3</td><td>12</td><td>40</td><td>90</td></tr>
+              <tr><td>2</td><td>Push-up</td><td>3</td><td>15</td><td>0 (BW)</td><td>60</td></tr>
+              <tr><td>3</td><td>Dumbbell Row</td><td>4</td><td>10</td><td>15</td><td>75</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px; display:flex; gap:8px;">
+          <button class="mockup-btn" style="background:#10B981;">+ Add Exercise</button>
+          <button class="mockup-btn">💾 Save Program</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SECTION: HOOKS ═══ -->
+  <div class="section" id="hooks">
+    <div class="section-number">⚡</div>
+    <h2>Kiro Hooks — Workflow Automation</h2>
+    <p class="section-subtitle">Hooks are like mini GitHub Actions that live inside your IDE</p>
+
+    <p>Hooks are one of Kiro's most powerful features. They are <strong>automated actions triggered by file events</strong>. When a specific file is edited or saved, Kiro automatically runs a script or action. You never have to remember to do it manually.</p>
+
+    <h3>Example Hook: Auto-Download SSL Certificate</h3>
+    <div class="hook-flow">
+      <div class="hook-box trigger">
+        <div class="icon">📝</div>
+        <div class="title">Trigger</div>
+        <div class="desc">You edit run.py, database.py, or config.py</div>
+      </div>
+      <div class="hook-arrow">→</div>
+      <div class="hook-box action">
+        <div class="icon">🔍</div>
+        <div class="title">Action</div>
+        <div class="desc">Kiro checks: does global-bundle.pem exist?</div>
+      </div>
+      <div class="hook-arrow">→</div>
+      <div class="hook-box result">
+        <div class="icon">✅</div>
+        <div class="title">Result</div>
+        <div class="desc">If missing: downloads from AWS automatically</div>
+      </div>
+    </div>
+
+    <p>Without this hook, every new team member who clones the repo forgets to download the certificate and spends 20 minutes debugging why the connection fails. The hook makes this impossible to forget.</p>
+
+    <h3>How a Hook is Defined (in Kiro)</h3>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span>
+        <span>Kiro Hook Definition — .kiro/hooks/ssl-cert.yaml</span>
+      </div>
+      <pre><span class="key">name</span>: <span class="str">Download SSL Certificate</span>
+<span class="key">trigger</span>:
+  <span class="key">type</span>: <span class="str">file_edit</span>
+  <span class="key">files</span>:
+    - <span class="str">run.py</span>
+    - <span class="str">database.py</span>
+    - <span class="str">config.py</span>
+<span class="key">action</span>:
+  <span class="key">type</span>: <span class="str">shell</span>
+  <span class="key">command</span>: |
+    <span class="str">if [ ! -f global-bundle.pem ]; then</span>
+      <span class="str">wget https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem</span>
+      <span class="str">echo "✅ SSL certificate downloaded!"</span>
+    <span class="str">fi</span></pre>
+    </div>
+
+    <h3>Other Useful Hooks You Could Add</h3>
+    <div class="grid-2">
+      <div class="card" style="font-size:13px;">
+        <div class="card-title" style="color:#0066CC; font-size:13px;">🔍 Auto-Lint on Save</div>
+        <p><strong>Trigger:</strong> Any .py file saved<br>
+        <strong>Action:</strong> Run <code>flake8</code> and show errors in terminal<br>
+        <strong>Benefit:</strong> Catch code style issues immediately, not at code review</p>
+      </div>
+      <div class="card" style="font-size:13px;">
+        <div class="card-title" style="color:#0066CC; font-size:13px;">📦 Update requirements.txt</div>
+        <p><strong>Trigger:</strong> Any .py file that adds a new import<br>
+        <strong>Action:</strong> Run <code>pip freeze > requirements.txt</code><br>
+        <strong>Benefit:</strong> requirements.txt is always up to date, no manual work</p>
+      </div>
+      <div class="card" style="font-size:13px;">
+        <div class="card-title" style="color:#0066CC; font-size:13px;">🌱 Seed Test Data</div>
+        <p><strong>Trigger:</strong> database.py or models/ edited<br>
+        <strong>Action:</strong> Run seed script to populate DocumentDB with sample data<br>
+        <strong>Benefit:</strong> Always have data to test against after DB changes</p>
+      </div>
+      <div class="card" style="font-size:13px;">
+        <div class="card-title" style="color:#0066CC; font-size:13px;">📄 Generate API Docs</div>
+        <p><strong>Trigger:</strong> Any file in routes/ is edited<br>
+        <strong>Action:</strong> Auto-generate API documentation (Swagger/OpenAPI)<br>
+        <strong>Benefit:</strong> Docs are always in sync with code</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SECTION: NEXT ═══ -->
+  <div class="section" id="next">
+    <div class="section-number">🚀</div>
+    <h2>What's Next — Extending the MVP</h2>
+    <p class="section-subtitle">The MVP is just the foundation — here's how to grow it</p>
+
+    <div class="grid-2">
+      <div class="ext-card">
+        <div class="ext-icon">📱</div>
+        <div class="ext-title">Mobile App Integration</div>
+        <div class="ext-desc">Add REST API endpoints so any mobile app (React Native, Flutter) can connect to the same DocumentDB backend.</div>
+        <div class="ext-how">Ask Kiro: "Scaffold a FastAPI REST wrapper for the existing Flask app"</div>
+      </div>
+      <div class="ext-card">
+        <div class="ext-icon">🤖</div>
+        <div class="ext-title">ML-Powered Analytics</div>
+        <div class="ext-desc">Feed DocumentDB aggregation data into Amazon SageMaker to predict whether a client will reach their goal.</div>
+        <div class="ext-how">DocumentDB → Python pipeline → SageMaker model → prediction displayed in dashboard</div>
+      </div>
+      <div class="ext-card">
+        <div class="ext-icon">📅</div>
+        <div class="ext-title">Session Scheduling</div>
+        <div class="ext-desc">Add a booking system for trainer-client sessions with calendar integration, reminders, and cancellation handling.</div>
+        <div class="ext-how">Ask Kiro: "Add a new spec for session scheduling with Google Calendar integration"</div>
+      </div>
+      <div class="ext-card">
+        <div class="ext-icon">🥗</div>
+        <div class="ext-title">Nutrition Tracking</div>
+        <div class="ext-desc">Extend the DocumentDB schema with meal plans and calorie tracking — no migration needed, just add new fields to documents.</div>
+        <div class="ext-how">This is where DocumentDB shines — add fields to existing documents without breaking anything</div>
+      </div>
+      <div class="ext-card">
+        <div class="ext-icon">⌚</div>
+        <div class="ext-title">Wearable Integration</div>
+        <div class="ext-desc">Sync data from Garmin, Apple Watch, Fitbit via their APIs. Webhooks push new data directly into DocumentDB.</div>
+        <div class="ext-how">Ask Kiro: "Add webhook endpoints for Garmin Connect and Apple Health data"</div>
+      </div>
+      <div class="ext-card">
+        <div class="ext-icon">🔐</div>
+        <div class="ext-title">Production-Ready Security</div>
+        <div class="ext-desc">Replace hardcoded credentials with AWS Secrets Manager. Replace basic auth with Amazon Cognito. Deploy on ECS or Lambda.</div>
+        <div class="ext-how">AWS Secrets Manager + Amazon Cognito + ECS/Lambda = enterprise-grade security</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SECTION: CHEAT SHEET ═══ -->
+  <div class="section" id="cheatsheet">
+    <div class="section-number">📋</div>
+    <h2>Quick Reference Cheat Sheet</h2>
+    <p class="section-subtitle">Everything you need in one place — save this page!</p>
+
+    <div class="grid-2">
+      <div>
+        <h3>Essential Commands</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span>
+            <span>Terminal</span>
+          </div>
+          <pre><span class="cm"># Install dependencies</span>
+pip install flask pymongo dnspython
+
+<span class="cm"># Download SSL certificate</span>
+wget https://truststore.pki.rds.amazonaws.com\
+  /global/global-bundle.pem
+
+<span class="cm"># Open SSH Tunnel (leave running!)</span>
+ssh -L 27017:YOUR-DOCDB-ENDPOINT:27017 \
+  ec2-user@YOUR-EC2-BASTION -N
+
+<span class="cm"># Run the app</span>
+python run.py</pre>
+        </div>
+
+        <h3>DocumentDB Connection String</h3>
+        <div class="code-block">
+          <div class="code-header">
+            <span class="code-dot dot-red"></span><span class="code-dot dot-yellow"></span><span class="code-dot dot-green"></span>
+            <span>Connection String</span>
+          </div>
+          <pre><span class="url">mongodb://adminuser:&lt;password&gt;</span>
+<span class="url">@127.0.0.1:27017/</span>
+<span class="url">?tls=true</span>
+<span class="url">&tlsCAFile=global-bundle.pem</span>
+<span class="url">&retryWrites=false</span>
+<span class="url">&tlsAllowInvalidHostnames=true</span>
+<span class="url">&directConnection=true</span></pre>
+        </div>
+      </div>
+
+      <div>
+        <h3>Kiro Workflow Summary</h3>
+        <div class="card">
+          <table style="font-size:13px;">
+            <tr><th style="width:40px;">Phase</th><th>What happens</th><th style="width:80px;">Your action</th></tr>
+            <tr><td>1</td><td>Kiro reads prompt, generates EARS requirements</td><td><span class="badge badge-blue">Review</span></td></tr>
+            <tr><td>2</td><td>Kiro creates full system architecture + DB schema</td><td><span class="badge badge-blue">Review</span></td></tr>
+            <tr><td>3</td><td>Kiro creates 8-task MVP plan, needs connection string</td><td><span class="badge badge-orange">Provide</span></td></tr>
+            <tr><td>4</td><td>Kiro executes tasks, runs tests, asks for verification</td><td><span class="badge badge-green">Verify ✓</span></td></tr>
+            <tr><td>5</td><td>App is built — run with python run.py</td><td><span class="badge badge-green">Done! 🎉</span></td></tr>
+          </table>
+        </div>
+
+        <h3>Troubleshooting</h3>
+        <div class="card" style="font-size:13px;">
+          <table style="font-size:13px; margin:0;">
+            <tr><th>Error</th><th>Fix</th></tr>
+            <tr><td style="color:var(--accent-red);">Connection refused</td><td>SSH tunnel not running — open it</td></tr>
+            <tr><td style="color:var(--accent-red);">SSL handshake failed</td><td>global-bundle.pem missing — download it</td></tr>
+            <tr><td style="color:var(--accent-red);">Auth failed</td><td>Wrong password in connection string</td></tr>
+            <tr><td style="color:var(--accent-red);">Port already in use</td><td>Kill old tunnel: <code>pkill -f "ssh -L 27017"</code></td></tr>
+          </table>
+        </div>
+
+        <h3>Key Links</h3>
+        <div class="card" style="font-size:13px; line-height:2;">
+          📥 Kiro IDE: <strong>kiro.dev/downloads</strong><br>
+          📖 Kiro Docs: <strong>kiro.dev/docs</strong><br>
+          🗄️ DocumentDB Docs: <strong>docs.aws.amazon.com/documentdb</strong><br>
+          📝 AWS Blog (original): <strong>aws.amazon.com/blogs/database/</strong><br>
+          💰 Cost estimate: <strong>calculator.aws</strong>
+        </div>
+      </div>
+    </div>
+
+    <h3>The 3 Golden Rules for This Workshop</h3>
+    <div class="grid-3" style="margin-top:12px;">
+      <div style="background:linear-gradient(135deg, #0066CC, #0080FF); color:white; border-radius:12px; padding:20px; text-align:center;">
+        <div style="font-size:36px; margin-bottom:10px;">✋</div>
+        <div style="font-weight:800; font-size:15px; margin-bottom:8px;">Always Verify</div>
+        <div style="font-size:13px; opacity:0.9;">When Kiro asks you to verify, actually do it. Don't skip. Five minutes now saves hours later.</div>
+      </div>
+      <div style="background:linear-gradient(135deg, #FF9900, #FFB347); color:#1a1a1a; border-radius:12px; padding:20px; text-align:center;">
+        <div style="font-size:36px; margin-bottom:10px;">📋</div>
+        <div style="font-weight:800; font-size:15px; margin-bottom:8px;">Approve Before Moving</div>
+        <div style="font-size:13px; opacity:0.8;">Requirements → approve. Design → approve. Plan → approve. Never rush ahead.</div>
+      </div>
+      <div style="background:linear-gradient(135deg, #10B981, #059669); color:white; border-radius:12px; padding:20px; text-align:center;">
+        <div style="font-size:36px; margin-bottom:10px;">🔌</div>
+        <div style="font-weight:800; font-size:15px; margin-bottom:8px;">Keep Tunnel Open</div>
+        <div style="font-size:13px; opacity:0.9;">The SSH tunnel terminal must stay open the entire time. If the app disconnects, check if it's still running.</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- end main-content -->
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-grid">
+    <div>
+      <h3>Workshop Resources</h3>
+      <p style="font-size:13px; opacity:0.7; line-height:1.8;">
+        <a href="https://kiro.dev">kiro.dev</a><br>
+        <a href="https://kiro.dev/docs">kiro.dev/docs</a><br>
+        <a href="https://kiro.dev/pricing">kiro.dev/pricing</a>
+      </p>
+    </div>
+    <div>
+      <h3>AWS References</h3>
+      <p style="font-size:13px; opacity:0.7; line-height:1.8;">
+        <a href="https://aws.amazon.com/documentdb">Amazon DocumentDB</a><br>
+        <a href="https://docs.aws.amazon.com/documentdb">DocumentDB Docs</a><br>
+        <a href="https://calculator.aws">AWS Pricing Calculator</a>
+      </p>
+    </div>
+    <div>
+      <h3>Official Blog Post</h3>
+      <p style="font-size:13px; opacity:0.7; line-height:1.8;">By Anshu Vajpayee &amp; Karthik Vijayraghavan<br>
+        Published: December 11, 2025<br>
+        <a href="https://aws.amazon.com/blogs/database/build-a-fitness-center-management-application-with-kiro-using-amazon-documentdb-with-mongodb-compatibility/" style="font-size:11px;">aws.amazon.com/blogs/database/...</a>
+      </p>
+    </div>
+  </div>
+  <div style="margin-top:32px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.1); font-size:12px; opacity:0.4; text-align:center;">
+    AWS Community UAE · Kiro-tic Builders · Agentic AI Workshop · Study Guide
+  </div>
+</div>
+
+</body>
+</html>
